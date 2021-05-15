@@ -85,32 +85,6 @@ public class ClientHandler implements Runnable {
 
     private void download(DataOutputStream out, DataInputStream in) {
 
-        try {
-            var filename = in.readUTF();
-
-            File file = new File("server/" + filename);
-            if (!file.exists()) {
-                throw new FileNotFoundException();
-            }
-
-            var fileLength = file.length();
-            FileInputStream fis = new FileInputStream(file);
-            out.writeLong(fileLength);
-            int read = 0;
-            byte[] buffer = new byte[8*1024];
-            while ((read = fis.read(buffer)) != -1){
-                out.write(buffer, 0, read);
-            }
-            out.flush();
-            var downloadStatus = in.readUTF();
-            System.out.println("Download status " +downloadStatus);
-
-        } catch (FileNotFoundException e) {
-            System.err.println("Файл не найден");
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
 
