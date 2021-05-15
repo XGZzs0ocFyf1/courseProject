@@ -54,12 +54,6 @@ public class Client extends JFrame {
         });
 
         addWindowListener(new WindowAdapter() {
-            /**
-             * Invoked when a window is in the process of being closed.
-             * The close operation can be overridden at this point.
-             *
-             * @param e
-             */
             @Override
             public void windowClosing(WindowEvent e) {
                 super.windowClosing(e);
@@ -152,7 +146,7 @@ public class Client extends JFrame {
             out.writeUTF(filename);  //send filename
             out.writeLong(fileLength); //send fileLength
 
-            int read = 0;
+            var read = 0;
             byte[] buffer = new byte[8 * 1024];
             while ((read = fis.read(buffer)) != -1){
                 out.write(buffer, 0 , read);
