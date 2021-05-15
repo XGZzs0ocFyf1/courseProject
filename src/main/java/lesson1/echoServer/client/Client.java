@@ -39,6 +39,7 @@ public class Client extends JFrame {
             var cmds = textField.getText().split(" ");
 
             //since java13 modern switch
+            //fixme: внутри свитча стоит ловить эксепшены или это лучше делать до него?
             switch(cmds[0].toLowerCase()){
                 case "upload" -> sendFile(cmds[1]);
                 case "download" -> getFile(cmds[1]);
@@ -81,13 +82,64 @@ public class Client extends JFrame {
         //just a stub
     }
 
-    private void getFile(String filename) {
-        // домашнее задание до 13.05.2021
+    /**
+     * Метод загрузки файлов с сервера по имени
+     * Сервер реализован в том же проекте, поэтому адрес из корня проекта  папки server/
+     * @param filename имя файла для загрузки
+     */
+    private void getFile(String filename)  {
+        // todo: домашнее задание  13.05.2021
+        System.out.println("get file mode");
+        try {
+            out.writeUTF("download");
+            out.writeUTF(filename);
+
+            File file = new File("client/" + filename);
+            if (!file.exists()){
+                System.out.println("Создаю файл "+filename);
+                var success = file.createNewFile();
+                if (success){
+                    System.out.println("Файл удалось сгенерировать");
+                }else{
+                    System.err.println("Файл не удалось сгенерировать");
+                    return;
+                }
+            }
+
+            FileOutputStream fos = new FileOutputStream(file);
+
+            var size = in.readLong();
+            System.out.println("size = "+size);
+            byte[] buffer = new byte[8*1024];
+            var upperLimit = (size+buffer.length)/ buffer.length;
+            for (int i = 0; i < upperLimit; i++) {
+                var read = in.read(buffer);
+                fos.write(buffer, 0, read);
+            }
+
+            fos.close();
+
+            out.writeUTF("DOWNLOAD. OK");
+
+        } catch (IOException e) {
+            try {
+                out.writeUTF("DOWNLOAD. WRONG");
+            } catch (IOException ioException) {
+                ioException.printStackTrace();
+            }
+            e.printStackTrace();
+        }
+
+
     }
 
+    /**
+     * Метод отправки сообщений на сервер
+     * @param filename имя файла в папке client/ в корне проекта
+     */
     private void sendFile(String filename) {
         try {
-            System.out.println("имя файла: "+filename);
+
             File file = new File("client\\" + filename);
             if (!file.exists()) {
                 throw new FileNotFoundException();
@@ -95,7 +147,6 @@ public class Client extends JFrame {
 
             long fileLength = file.length();
             FileInputStream fis = new FileInputStream(file);
-
 
             out.writeUTF("upload"); //send command
             out.writeUTF(filename);  //send filename
@@ -110,7 +161,6 @@ public class Client extends JFrame {
             out.flush();
             var status = in.readUTF();
             System.out.println("Sending status: "+status);
-
 
         } catch (FileNotFoundException e) {
          System.err.println("File not found - /client/" + filename);

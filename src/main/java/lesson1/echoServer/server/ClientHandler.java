@@ -31,9 +31,8 @@ public class ClientHandler implements Runnable {
                 }
 
                 if ("download".equalsIgnoreCase(command)){
-                    //todo: домашнее задание
+                    download(out, in);
                 }
-
 
                 //некий произвольный выход по команде "exit"
                 if ("exit".equals(command)){
@@ -46,7 +45,6 @@ public class ClientHandler implements Runnable {
                     disconnected();
                     break;
                 }
-
 
                 //посылаем команду обратно
                 out.writeUTF(command);
@@ -68,8 +66,6 @@ public class ClientHandler implements Runnable {
             File file = new File("server/"+ in.readUTF()); // читаем имя файла
             if (!file.exists()){
                 file.createNewFile();
-                file.createNewFile();
-
             }
             FileOutputStream fos = new FileOutputStream(file);
             long size = in.readLong();
@@ -86,6 +82,38 @@ public class ClientHandler implements Runnable {
            e.printStackTrace();
         }
     }
+
+    private void download(DataOutputStream out, DataInputStream in) {
+
+        try {
+            var filename = in.readUTF();
+
+            File file = new File("server/" + filename);
+            if (!file.exists()) {
+                throw new FileNotFoundException();
+            }
+
+            var fileLength = file.length();
+            FileInputStream fis = new FileInputStream(file);
+            out.writeLong(fileLength);
+            int read = 0;
+            byte[] buffer = new byte[8*1024];
+            while ((read = fis.read(buffer)) != -1){
+                out.write(buffer, 0, read);
+            }
+            out.flush();
+            var downloadStatus = in.readUTF();
+            System.out.println("Download status " +downloadStatus);
+
+        } catch (FileNotFoundException e) {
+            System.err.println("Файл не найден");
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
 
     /**
      * just close socket here
