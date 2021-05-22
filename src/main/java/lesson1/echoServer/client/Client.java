@@ -82,8 +82,46 @@ public class Client extends JFrame {
      * @param filename имя файла для загрузки
      */
     private void getFile(String filename)  {
+        System.out.println("get file mode");
+        try {
+            out.writeUTF("download");
+            out.writeUTF(filename);
 
+            File file = new File("client/" + filename);
+            if (!file.exists()){
+                System.out.println("Создаю файл "+filename);
+                var success = file.createNewFile();
+                if (success){
+                    System.out.println("Файл удалось сгенерировать");
+                }else{
+                    System.err.println("Файл не удалось сгенерировать");
+                    return;
+                }
+            }
 
+            FileOutputStream fos = new FileOutputStream(file);
+
+            var size = in.readLong();
+            System.out.println("size = "+size);
+            byte[] buffer = new byte[8*1024];
+            var upperLimit = (size+buffer.length)/ buffer.length;
+            for (int i = 0; i < upperLimit; i++) {
+                var read = in.read(buffer);
+                fos.write(buffer, 0, read);
+            }
+
+            fos.close();
+
+            out.writeUTF("DOWNLOAD. OK");
+
+        } catch (IOException e) {
+            try {
+                out.writeUTF("DOWNLOAD. WRONG");
+            } catch (IOException ioException) {
+                ioException.printStackTrace();
+            }
+            e.printStackTrace();
+        }
 
     }
 
